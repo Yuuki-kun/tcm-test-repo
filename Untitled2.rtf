@@ -1,0 +1,245 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2759
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 import \{ Injectable \} from '@angular/core';\
+import \{ HttpClient \} from '@angular/common/http';\
+import \{ Observable \} from 'rxjs';\
+\
+interface Medicine \{\
+  id: number;\
+  name: string;\
+  description: string;\
+  // C\'e1c thu\uc0\u7897 c t\'ednh kh\'e1c c\u7911 a Medicine\
+\}\
+\
+@Injectable(\{\
+  providedIn: 'root'\
+\})\
+export class MedicineService \{\
+  private apiUrl = 'https://api.example.com/medicines'; // Thay th\uc0\u7871  URL API c\u7911 a b\u7841 n\
+\
+  constructor(private http: HttpClient) \{ \}\
+\
+  getMedicines(): Observable<Medicine[]> \{\
+    return this.http.get<Medicine[]>(this.apiUrl);\
+  \}\
+\
+  getMedicine(id: number): Observable<Medicine> \{\
+    return this.http.get<Medicine>(`$\{this.apiUrl\}/$\{id\}`);\
+  \}\
+\
+  addMedicine(medicine: Medicine): Observable<Medicine> \{\
+    return this.http.post<Medicine>(this.apiUrl, medicine);\
+  \}\
+\}\
+\
+\
+\
+import \{ Component, OnInit \} from '@angular/core';\
+import \{ MedicineService \} from '../medicine.service';\
+\
+@Component(\{\
+  selector: 'app-medicine-list',\
+  templateUrl: './medicine-list.component.html',\
+  styleUrls: ['./medicine-list.component.css']\
+\})\
+export class MedicineListComponent implements OnInit \{\
+  medicines: any[] = [];\
+\
+  constructor(private medicineService: MedicineService) \{ \}\
+\
+  ngOnInit(): void \{\
+    this.medicineService.getMedicines().subscribe(data => \{\
+      this.medicines = data;\
+    \});\
+  \}\
+\}\
+<ul>\
+  <li *ngFor="let medicine of medicines">\
+    <a [routerLink]="['/medicine', medicine.id]">\{\{ medicine.name \}\}</a>\
+  </li>\
+</ul>\
+\
+\
+import \{ Component, OnInit \} from '@angular/core';\
+import \{ ActivatedRoute \} from '@angular/router';\
+import \{ MedicineService \} from '../medicine.service';\
+\
+@Component(\{\
+  selector: 'app-medicine-detail',\
+  templateUrl: './medicine-detail.component.html',\
+  styleUrls: ['./medicine-detail.component.css']\
+\})\
+export class MedicineDetailComponent implements OnInit \{\
+  medicine: any;\
+\
+  constructor(\
+    private route: ActivatedRoute,\
+    private medicineService: MedicineService\
+  ) \{ \}\
+\
+  ngOnInit(): void \{\
+    const id = +this.route.snapshot.paramMap.get('id')!;\
+    this.medicineService.getMedicine(id).subscribe(data => \{\
+      this.medicine = data;\
+    \});\
+  \}\
+\}\
+\
+\
+<div *ngIf="medicine">\
+  <h2>\{\{ medicine.name \}\}</h2>\
+  <p>\{\{ medicine.description \}\}</p>\
+  <!-- C\'e1c thu\uc0\u7897 c t\'ednh kh\'e1c c\u7911 a Medicine -->\
+</div>\
+\
+\
+import \{ Component \} from '@angular/core';\
+import \{ MedicineService \} from '../medicine.service';\
+import \{ Router \} from '@angular/router';\
+\
+@Component(\{\
+  selector: 'app-medicine-add',\
+  templateUrl: './medicine-add.component.html',\
+  styleUrls: ['./medicine-add.component.css']\
+\})\
+export class MedicineAddComponent \{\
+  medicine = \{\
+    name: '',\
+    description: ''\
+    // C\'e1c thu\uc0\u7897 c t\'ednh kh\'e1c c\u7911 a Medicine\
+  \};\
+\
+  constructor(\
+    private medicineService: MedicineService,\
+    private router: Router\
+  ) \{ \}\
+\
+  addMedicine(): void \{\
+    this.medicineService.addMedicine(this.medicine).subscribe(() => \{\
+      this.router.navigate(['/medicines']);\
+    \});\
+  \}\
+\}\
+<form (ngSubmit)="addMedicine()">\
+  <label for="name">Name:</label>\
+  <input id="name" [(ngModel)]="medicine.name" name="name" required>\
+\
+  <label for="description">Description:</label>\
+  <textarea id="description" [(ngModel)]="medicine.description" name="description"></textarea>\
+\
+  <!-- C\'e1c input kh\'e1c cho c\'e1c thu\uc0\u7897 c t\'ednh c\u7911 a Medicine -->\
+\
+  <button type="submit">Add Medicine</button>\
+</form>\
+\
+\
+import \{ NgModule \} from '@angular/core';\
+import \{ RouterModule, Routes \} from '@angular/router';\
+import \{ MedicineListComponent \} from './medicine-list/medicine-list.component';\
+import \{ MedicineDetailComponent \} from './medicine-detail/medicine-detail.component';\
+import \{ MedicineAddComponent \} from './medicine-add/medicine-add.component';\
+\
+const routes: Routes = [\
+  \{ path: '', redirectTo: '/medicines', pathMatch: 'full' \},\
+  \{ path: 'medicines', component: MedicineListComponent \},\
+  \{ path: 'medicine/:id', component: MedicineDetailComponent \},\
+  \{ path: 'add-medicine', component: MedicineAddComponent \}\
+];\
+\
+@NgModule(\{\
+  imports: [RouterModule.forRoot(routes)],\
+  exports: [RouterModule]\
+\})\
+export class AppRoutingModule \{ \}\
+\
+\
+\
+import \{ BrowserModule \} from '@angular/platform-browser';\
+import \{ NgModule \} from '@angular/core';\
+import \{ FormsModule \} from '@angular/forms';\
+import \{ HttpClientModule \} from '@angular/common/http';\
+\
+import \{ AppRoutingModule \} from './app-routing.module';\
+import \{ AppComponent \} from './app.component';\
+import \{ MedicineListComponent \} from './medicine-list/medicine-list.component';\
+import \{ MedicineDetailComponent \} from './medicine-detail/medicine-detail.component';\
+import \{ MedicineAddComponent \} from './medicine-add/medicine-add.component';\
+\
+@NgModule(\{\
+  declarations: [\
+    AppComponent,\
+    MedicineListComponent,\
+    MedicineDetailComponent,\
+    MedicineAddComponent\
+  ],\
+  imports: [\
+    BrowserModule,\
+    AppRoutingModule,\
+    FormsModule,\
+    HttpClientModule\
+  ],\
+  providers: [],\
+  bootstrap: [AppComponent]\
+\})\
+export class AppModule \{ \}\
+\
+\
+import \{ Injectable \} from '@angular/core';\
+import \{ HttpClient \} from '@angular/common/http';\
+import \{ Observable \} from 'rxjs';\
+\
+interface Medicine \{\
+  id: number;\
+  name: string;\
+  description: string;\
+\}\
+\
+@Injectable(\{\
+  providedIn: 'root'\
+\})\
+export class MedicineService \{\
+  private apiUrl = 'https://api.example.com/medicines'; // Thay th\uc0\u7871  URL API c\u7911 a b\u7841 n\
+\
+  constructor(private http: HttpClient) \{ \}\
+\
+  getMedicineById(id: number): Observable<Medicine> \{\
+    return this.http.get<Medicine>(`$\{this.apiUrl\}/$\{id\}`);\
+  \}\
+\}\
+\
+import \{ Component, OnInit \} from '@angular/core';\
+import \{ of \} from 'rxjs';\
+import \{ concatMap, delay \} from 'rxjs/operators';\
+import \{ MedicineService \} from './medicine.service';\
+\
+@Component(\{\
+  selector: 'app-medicine-list',\
+  template: `\
+    <ul>\
+      <li *ngFor="let medicine of medicines">\{\{ medicine.name \}\}</li>\
+    </ul>\
+  `\
+\})\
+export class MedicineListComponent implements OnInit \{\
+  medicines: any[] = [];\
+  medicineIds: number[] = [1, 2, 3, 4, 5]; // Danh s\'e1ch c\'e1c ID thu\uc0\u7889 c c\u7847 n l\u7845 y\
+\
+  constructor(private medicineService: MedicineService) \{\}\
+\
+  ngOnInit(): void \{\
+    of(...this.medicineIds).pipe(\
+      concatMap(id => this.medicineService.getMedicineById(id).pipe(delay(1000))) // Gi\uc0\u7843  l\u7853 p delay 1 gi\'e2y gi\u7919 a m\u7895 i cu\u7897 c g\u7885 i API\
+    ).subscribe(\{\
+      next: medicine => this.medicines.push(medicine),\
+      complete: () => console.log('All medicines fetched'),\
+      error: err => console.error('Error fetching medicines:', err)\
+    \});\
+  \}\
+\}\
+\
+}
